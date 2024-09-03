@@ -1,17 +1,9 @@
-import asyncio
-
 import celery
 from celery import current_app as app
 from celery.utils.functional import chunks
-from celery.app.task import _task_stack, signature
+from celery.app.task import _task_stack
 from celery_async.utils import to_async
-
-
-# celery.starmap not work with coroutine use async starmap
-@app.task(name="celery.async_starmap")
-async def async_starmap(task, it):
-    task = signature(task, app=app).type
-    return [await task(*item) for item in it]
+from celery import signature
 
 
 class AsyncTask(app.Task):
@@ -35,6 +27,9 @@ class AsyncTask(app.Task):
         super().__init__(*args, **kwargs)
         self.run = to_async(self.run)
 
+    def starmap(self, it):
+        return signature("celery.async_starmap", kwargs={"task": self.s(), "it": list(it)})
+
     def chunks(self, it, n, **options):
         """
         Split many task in small chunks performed synchronously
@@ -46,7 +41,7 @@ class AsyncTask(app.Task):
             celery.group: group of chunks
         """
         return celery.group(
-            (async_starmap.s(self.s(), part) for part in chunks(iter(it), n)),
+            (self.starmap(part) for part in chunks(iter(it), n)),
             app=self._app,
             **options
         )
