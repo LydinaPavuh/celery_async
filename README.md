@@ -1,6 +1,6 @@
 # celery_async
 
-Async pool for celery worker
+Async pool for celery worker  
 The pool provides a graceful stop while waiting for the current tasks to be completed
 
 ```python
