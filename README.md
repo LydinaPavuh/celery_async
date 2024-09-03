@@ -1,7 +1,8 @@
 # celery_async
 
 Async pool for celery worker  
-The pool provides a graceful stop while waiting for the current tasks to be completed
+The pool provides a graceful stop while waiting for the current tasks to be completed  
+Pool may works with non async tasks, but these tasks blocks events loop for other tasks  
 
 ```python
 from celery import Celery
